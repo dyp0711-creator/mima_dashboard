@@ -247,13 +247,16 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
     <div class="table-wrap">
       <div class="table-header">
         <div class="table-title" id="dailyTableTitle">일별 상세</div>
-        <select class="filter-select" id="dailySortSelect" onchange="setDailySort(this.value)">
-          <option value="최근순">최근순</option>
-          <option value="오래된순">오래된순</option>
-          <option value="주문건수">주문건수 많은순</option>
-          <option value="판매건수">판매건수 많은순</option>
-          <option value="판매금액">판매금액 많은순</option>
-        </select>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;color:var(--text-muted);">날짜 클릭 시 상세</span>
+          <select class="filter-select" id="dailySortSelect" onchange="setDailySort(this.value)">
+            <option value="최근순">최근순</option>
+            <option value="오래된순">오래된순</option>
+            <option value="주문건수">주문건수 많은순</option>
+            <option value="판매건수">판매건수 많은순</option>
+            <option value="판매금액">판매금액 많은순</option>
+          </select>
+        </div>
       </div>
       <table class="data-table">
         <thead><tr>
@@ -264,6 +267,43 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
         </tr></thead>
         <tbody id="tbDaily"></tbody>
       </table>
+    </div>
+
+    <!-- 일별 드릴다운 패널 -->
+    <div class="drill-panel" id="dailyDrillPanel">
+      <div class="drill-header">
+        <span class="drill-title" id="dailyDrillTitle">일별 상세</span>
+        <button class="drill-close" onclick="closeDailyDrill()">✕</button>
+      </div>
+      <div class="drill-sub" id="dailyDrillSub"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--border);">
+        <!-- 채널별 -->
+        <div style="border-right:1px solid var(--border);">
+          <div style="padding:10px 16px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);background:var(--surface2);">채널별</div>
+          <table class="data-table">
+            <thead><tr>
+              <th>채널</th>
+              <th>주문건수</th>
+              <th>판매금액</th>
+              <th>비중</th>
+            </tr></thead>
+            <tbody id="tbDailyDrillCh"></tbody>
+          </table>
+        </div>
+        <!-- 상품별 -->
+        <div>
+          <div style="padding:10px 16px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);background:var(--surface2);">상품별</div>
+          <table class="data-table">
+            <thead><tr>
+              <th>카테고리</th>
+              <th>주문건수</th>
+              <th>판매금액</th>
+              <th>비중</th>
+            </tr></thead>
+            <tbody id="tbDailyDrillProd"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -786,7 +826,82 @@ function renderDailyCharts(){
 }
 function renderDailyTable(){
   const d=getDailyRows();
-  document.getElementById('tbDaily').innerHTML=d.map(r=>`<tr><td class="num-cell">${r.날짜}</td><td class="num-cell">${r.주문건수}건</td><td class="num-cell">${r.판매건수}건</td><td class="amt ${r.판매금액===0?'amt-zero':''}">${fWon(r.판매금액)}</td></tr>`).join('');
+  document.getElementById('tbDaily').innerHTML=d.map(r=>`
+    <tr class="clickable-row" onclick="openDailyDrill('${r.날짜}')">
+      <td class="num-cell">${r.날짜}</td>
+      <td class="num-cell">${r.주문건수}건</td>
+      <td class="num-cell">${r.판매건수}건</td>
+      <td class="amt ${r.판매금액===0?'amt-zero':''}">${fWon(r.판매금액)}</td>
+    </tr>`).join('');
+}
+
+function openDailyDrill(date){
+  // 해당 날짜 + 현재 모드/상품 필터 적용
+  let R=filtered();
+  if(DAILY_PROD!=='전체') R=R.filter(r=>r.카테고리===DAILY_PROD);
+  const dayRows=R.filter(r=>r.날짜===date);
+
+  const totalOrd=dayRows.length;
+  const salesRows=dayRows.filter(r=>r.판매구분==='판매');
+  const salesAmt=salesRows.reduce((s,r)=>s+r.판매가,0);
+
+  // 채널별 집계
+  const chMap={};
+  dayRows.forEach(r=>{
+    const ch=r.판매처||'기타';
+    if(!chMap[ch]) chMap[ch]={채널:ch,주문건수:0,판매금액:0};
+    chMap[ch].주문건수++;
+    if(r.판매구분==='판매') chMap[ch].판매금액+=r.판매가;
+  });
+  const chList=Object.values(chMap).sort((a,b)=>b.판매금액-a.판매금액);
+  const chTotal=chList.reduce((s,r)=>s+r.판매금액,0)||1;
+
+  // 상품별 집계
+  const prodMap={};
+  dayRows.forEach(r=>{
+    const cat=r.카테고리||'기타';
+    if(!prodMap[cat]) prodMap[cat]={카테고리:cat,주문건수:0,판매금액:0};
+    prodMap[cat].주문건수++;
+    if(r.판매구분==='판매') prodMap[cat].판매금액+=r.판매가;
+  });
+  const prodList=Object.values(prodMap).sort((a,b)=>b.판매금액-a.판매금액);
+  const prodTotal=prodList.reduce((s,r)=>s+r.판매금액,0)||1;
+
+  // 헤더
+  const modeLabel=MODE==='all'?'전체':MODE==='online'?'온라인':'오프라인';
+  document.getElementById('dailyDrillTitle').textContent=`${date} · ${modeLabel}${DAILY_PROD!=='전체'?' · '+DAILY_PROD:''} 상세`;
+  document.getElementById('dailyDrillSub').innerHTML=`
+    <span class="drill-stat">총 주문 <strong>${totalOrd}건</strong></span>
+    <span class="drill-stat">판매금액 <strong>${fWon(salesAmt)}</strong></span>
+    <span class="drill-stat">판매 <strong>${salesRows.length}건</strong></span>
+    <span class="drill-stat">판촉 <strong>${totalOrd-salesRows.length}건</strong></span>`;
+
+  // 채널 테이블
+  document.getElementById('tbDailyDrillCh').innerHTML=chList.map(r=>`
+    <tr>
+      <td><span class="ch-chip ${getChCls(r.채널)}">${r.채널}</span></td>
+      <td class="num-cell">${r.주문건수}건</td>
+      <td class="amt">${fWon(r.판매금액)}</td>
+      <td><div class="bar-mini-wrap"><div class="bar-mini-track"><div class="bar-mini-fill" style="width:${(r.판매금액/chTotal*100).toFixed(1)}%"></div></div><span class="bar-mini-pct">${(r.판매금액/chTotal*100).toFixed(1)}%</span></div></td>
+    </tr>`).join('');
+
+  // 상품 테이블
+  document.getElementById('tbDailyDrillProd').innerHTML=prodList.map(r=>`
+    <tr>
+      <td style="font-weight:600;">${r.카테고리}</td>
+      <td class="num-cell">${r.주문건수}건</td>
+      <td class="amt">${fWon(r.판매금액)}</td>
+      <td><div class="bar-mini-wrap"><div class="bar-mini-track"><div class="bar-mini-fill" style="width:${(r.판매금액/prodTotal*100).toFixed(1)}%"></div></div><span class="bar-mini-pct">${(r.판매금액/prodTotal*100).toFixed(1)}%</span></div></td>
+    </tr>`).join('');
+
+  // 패널 열기 + 스크롤
+  const panel=document.getElementById('dailyDrillPanel');
+  panel.classList.add('open');
+  setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+}
+
+function closeDailyDrill(){
+  document.getElementById('dailyDrillPanel').classList.remove('open');
 }
 
 // ── 월별 ──────────────────────────────────────────────────
@@ -996,7 +1111,14 @@ function colSort(table, col, thEl){
 
   if(table==='daily'){
     const d=getDailyRows().sort(sorter);
-    document.getElementById('tbDaily').innerHTML=d.map(r=>`<tr><td class="num-cell">${r.날짜}</td><td class="num-cell">${r.주문건수}건</td><td class="num-cell">${r.판매건수}건</td><td class="amt ${r.판매금액===0?'amt-zero':''}">${fWon(r.판매금액)}</td></tr>`).join('');
+    document.getElementById('tbDaily').innerHTML=d.map(r=>`
+      <tr class="clickable-row" onclick="openDailyDrill('${r.날짜}')">
+        <td class="num-cell">${r.날짜}</td>
+        <td class="num-cell">${r.주문건수}건</td>
+        <td class="num-cell">${r.판매건수}건</td>
+        <td class="amt ${r.판매금액===0?'amt-zero':''}">${fWon(r.판매금액)}</td>
+      </tr>`).join('');
+    closeDailyDrill();
   }
   if(table==='monthly'){
     const d=getMonthlyRowsSorted().sort(sorter);
