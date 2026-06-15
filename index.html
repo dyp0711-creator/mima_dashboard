@@ -77,11 +77,11 @@ body{background:var(--bg);color:var(--t1);font-family:'Noto Sans KR',sans-serif;
 .h280{height:280px;}
 /* SPARK */
 .spark-g{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
-.spark{background:var(--sur);border:1px solid var(--bor);border-radius:12px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;min-height:90px;}
+.spark{background:var(--sur);border:1px solid var(--bor);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;min-height:90px;gap:8px;}
 .spark-l{font-size:12px;color:var(--t2);margin-bottom:6px;}
-.spark-v{font-size:22px;font-weight:800;letter-spacing:-1px;}
+.spark-v{font-size:18px;font-weight:800;letter-spacing:-0.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .spark-d{font-size:12px;margin-top:4px;}
-.spark-c{width:90px!important;height:36px!important;flex-shrink:0;max-width:90px;}
+.spark-c{width:72px!important;height:32px!important;flex-shrink:0;max-width:72px;}
 /* INSIGHT */
 .ins-g{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
 .ins{background:var(--sur);border:1px solid var(--bor);border-radius:10px;padding:14px 16px;display:flex;gap:10px;}
@@ -714,12 +714,12 @@ function rSum(){
 
   el('sparkG').innerHTML=spDefs.map((s,i)=>`
     <div class="spark">
-      <div style="flex:1;min-width:0;"><div class="spark-l">${s.l}</div><div class="spark-v">${s.v}</div><div class="spark-d" id="spD${i}"></div></div>
+      <div style="flex:1;min-width:0;overflow:hidden;"><div class="spark-l">${s.l}</div><div class="spark-v" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.v}</div><div class="spark-d" id="spD${i}"></div></div>
       <div style="width:90px;height:36px;flex-shrink:0;position:relative;"><canvas id="spC${i}" style="width:90px!important;height:36px!important;"></canvas></div>
     </div>`).join('');
 
   spDefs.forEach((s,i)=>{
-    setD('spD'+i,s.c[0],s.c[1]);
+    setD('spD'+i,s.c[0],s.c[1],'전월 동기 대비');
     if(s.d.length){
       mkC('spC'+i,'line',days30,[{data:s.d,borderColor:s.sc,borderWidth:1.5,pointRadius:0,fill:true,backgroundColor:s.sc+'18',tension:.3}],{noScale:true,noLegend:true});
     }
@@ -760,11 +760,11 @@ function rSum(){
   el('insG').innerHTML=ins.slice(0,6).map(i=>`<div class="ins"><div class="itag ${tc[i.tag]||'itag-i'}">${i.tag}</div><div><div class="ins-tt">${i.ttl}</div><div class="ins-ds">${i.ds}</div></div></div>`).join('');
 }
 
-function setD(id,cur,prv){
+function setD(id,cur,prv,label){
   const e=el(id);if(!e) return;
   if(!prv){e.innerHTML='<span class="mu">이전 데이터 없음</span>';return;}
   const diff=cur-prv,pct=Math.abs(diff/prv*100).toFixed(1),up=diff>=0;
-  e.innerHTML=`<span class="${up?'up':'dn'}">${up?'▲':'▼'} ${pct}% 전일 대비</span>`;
+  e.innerHTML=`<span class="${up?'up':'dn'}">${up?'▲':'▼'} ${pct}% ${label||'전일 대비'}</span>`;
 }
 
 // ── 판매 ──────────────────────────────────────────────────
@@ -1299,9 +1299,9 @@ function mkC(id,type,labels,datasets,opts={}){
         legend:{display:opts.legend??(type==='doughnut'),position:'bottom',labels:{color:'#9ca3af',padding:12,font:{size:11}}},
         tooltip:{backgroundColor:'#1f2937',titleColor:'#f9fafb',bodyColor:'#d1d5db',borderWidth:0,padding:10,callbacks:opts.tt||{}}
       },
-      scales:opts.noScale||type==='doughnut'?{}:{
-        x:{display:!opts.noScale,grid:{color:'rgba(0,0,0,0)'},ticks:{maxRotation:45,font:{size:10}},stacked:opts.stacked||false},
-        y:{display:!opts.noScale,grid:{color:'#f3f4f6'},ticks:{callback:opts.yF||(v=>'₩'+Math.round(v).toLocaleString()),font:{size:10}},stacked:opts.stacked||false},
+      scales:type==='doughnut'?{}:opts.noScale?{x:{display:false},y:{display:false}}:{
+        x:{display:true,grid:{color:'rgba(0,0,0,0)'},ticks:{maxRotation:45,font:{size:10}},stacked:opts.stacked||false},
+        y:{display:true,grid:{color:'#f3f4f6'},ticks:{callback:opts.yF||(v=>'₩'+Math.round(v).toLocaleString()),font:{size:10}},stacked:opts.stacked||false},
       }
     }
   });
