@@ -558,8 +558,8 @@ function getAR(){
   if(AP==='7d'){const d=new Date(y);d.setDate(d.getDate()-6);return{f:d.toISOString().slice(0,10),t:y};}
   if(AP==='30d'){const d=new Date(y);d.setDate(d.getDate()-29);return{f:d.toISOString().slice(0,10),t:y};}
   if(AP==='thismonth') return{f:ms(),t:y};
-  if(AP==='all') return{f:'2000-01-01',t:y};
-  return{f:AFr||'2000-01-01',t:ATo||y};
+  if(AP==='all') return{f:'2025-01-01',t:y};
+  return{f:AFr||'2025-01-01',t:ATo||y};
 }
 function setAP(p,btn,barId){
   AP=p;
@@ -613,8 +613,8 @@ function getSRange(){
   if(SP==='7d'){const d=new Date(y);d.setDate(d.getDate()-6);return{f:d.toISOString().slice(0,10),t:y};}
   if(SP==='30d'){const d=new Date(y);d.setDate(d.getDate()-29);return{f:d.toISOString().slice(0,10),t:y};}
   if(SP==='thismonth') return{f:ms(),t:y};
-  if(SP==='all') return{f:'2000-01-01',t:y};
-  return{f:SFr||'2000-01-01',t:STo||y};
+  if(SP==='all') return{f:'2025-01-01',t:y};
+  return{f:SFr||'2025-01-01',t:STo||y};
 }
 function setSP(p,btn){
   SP=p;
