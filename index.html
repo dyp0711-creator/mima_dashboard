@@ -245,7 +245,7 @@ tr:hover td{background:#fafbff;}
   <div style="font-size:12px;color:var(--t2);margin-bottom:8px;">기간: <span id="sRangeLbl" style="font-family:'DM Mono',monospace;"></span></div>
   <div class="kpi-g kpi-g5">
     <div class="kpi"><div class="kpi-l">판매금액</div><div class="kpi-v" id="p-rev">—</div><div class="kpi-d" id="p-revS">—</div></div>
-    <div class="kpi"><div class="kpi-l">주문건수</div><div class="kpi-v" id="p-cnt">—</div><div class="kpi-d" id="p-cntS">—</div></div>
+    <div class="kpi"><div class="kpi-l">판매건수</div><div class="kpi-v" id="p-cnt">—</div><div class="kpi-d" id="p-cntS">—</div></div>
     <div class="kpi"><div class="kpi-l">평균 단가</div><div class="kpi-v" id="p-avg">—</div><div class="kpi-d">판매가 &gt; 0</div></div>
     <div class="kpi"><div class="kpi-l">광고비 (당월)</div><div class="kpi-v" id="p-ad">—</div><div class="kpi-d" id="p-adS">—</div></div>
     <div class="kpi"><div class="kpi-l">ROAS (당월)</div><div class="kpi-v" id="p-roas">—</div><div class="kpi-d" style="font-size:11px;color:var(--t3);">판매금액 ÷ 광고비</div></div>
@@ -271,7 +271,6 @@ tr:hover td{background:#fafbff;}
       </div>
       <table><thead><tr id="dTblH">
         <th onclick="cS('d','날짜',this)">날짜</th>
-        <th onclick="cS('d','주문건수',this)">주문건수</th>
         <th onclick="cS('d','판매건수',this)">판매건수</th>
         <th onclick="cS('d','판매금액',this)">판매금액</th>
         <th class="adcol" onclick="cS('d','spend',this)">광고비</th>
@@ -302,7 +301,7 @@ tr:hover td{background:#fafbff;}
       <div class="drill-hd"><span class="drill-t" id="dr-d-t">—</span><button class="drill-x" onclick="cdr('d')">✕</button></div>
       <div class="drill-s" id="dr-d-s"></div>
       <div class="d2">
-        <div><div class="d2h">채널별</div><table><thead><tr><th>채널</th><th>건수</th><th>판매금액</th><th>비중</th></tr></thead><tbody id="dr-d-ch"></tbody></table></div>
+        <div><div class="d2h">채널별</div><table><thead><tr><th>채널</th><th>판매건수</th><th>판매금액</th><th>비중</th></tr></thead><tbody id="dr-d-ch"></tbody></table></div>
         <div><div class="d2h">상품별</div><table><thead><tr><th>카테고리</th><th>건수</th><th>판매금액</th><th>비중</th></tr></thead><tbody id="dr-d-pr"></tbody></table></div>
       </div>
     </div>
@@ -319,7 +318,7 @@ tr:hover td{background:#fafbff;}
         <select class="tsel" onchange="setMS(this.value)"><option value="최근순">최근순</option><option value="오래된순">오래된순</option><option value="판매금액">판매금액↓</option></select>
       </div>
       <table><thead><tr>
-        <th>월</th><th>주문건수</th><th>판매건수</th><th>판매금액</th><th>평균 단가</th>
+        <th>월</th><th>판매건수</th><th>판매금액</th><th>평균 단가</th>
         <th class="adcol">광고비</th><th class="adcol">ROAS</th>
       </tr></thead><tbody id="tbM"></tbody></table>
     </div>
@@ -336,7 +335,7 @@ tr:hover td{background:#fafbff;}
         <div class="tc"><span style="font-size:11px;color:var(--t3);">클릭 시 상품 ↗</span>
         <select class="tsel" onchange="setChS(this.value)"><option value="판매금액">판매금액↓</option><option value="주문건수">주문건수↓</option><option value="채널명">채널명순</option></select></div>
       </div>
-      <table><thead><tr><th>채널</th><th>주문건수</th><th>판매금액</th><th>비중</th></tr></thead><tbody id="tbCh"></tbody></table>
+      <table><thead><tr><th>채널</th><th>판매건수</th><th>판매금액</th><th>비중</th></tr></thead><tbody id="tbCh"></tbody></table>
     </div>
     <div class="drill" id="dr-ch">
       <div class="drill-hd"><span class="drill-t" id="dr-ch-t">—</span><button class="drill-x" onclick="cdr('ch')">✕</button></div>
@@ -355,7 +354,7 @@ tr:hover td{background:#fafbff;}
       <div class="th"><div class="tt" id="prTblT">카테고리별 상세</div>
         <select class="tsel" onchange="setPrS(this.value)"><option value="판매금액">판매금액↓</option><option value="주문건수">주문건수↓</option></select>
       </div>
-      <table><thead><tr><th>카테고리</th><th>주문건수</th><th>판매금액</th><th>비중</th></tr></thead><tbody id="tbPr"></tbody></table>
+      <table><thead><tr><th>카테고리</th><th>판매건수</th><th>판매금액</th><th>비중</th></tr></thead><tbody id="tbPr"></tbody></table>
     </div>
   </div>
   <!-- 상품별 드릴다운 -->
@@ -368,7 +367,7 @@ tr:hover td{background:#fafbff;}
     <div class="g2eq">
       <div>
         <div class="d2h">채널별 판매금액</div>
-        <table><thead><tr><th>채널</th><th>건수</th><th>판매금액</th><th>비중</th></tr></thead><tbody id="dr-pr-ch"></tbody></table>
+        <table><thead><tr><th>채널</th><th>판매건수</th><th>판매금액</th><th>비중</th></tr></thead><tbody id="dr-pr-ch"></tbody></table>
       </div>
       <div>
         <div class="d2h">상품명별 세부 내역</div>
@@ -598,7 +597,7 @@ async function loadAll(){
 }
 
 function updMB(){
-  const R=getSR();
+  const R=getSR().filter(r=>r.판매구분==='판매');
   sv('mb-all',R.length.toLocaleString());
   sv('mb-on',R.filter(r=>!OFFLINE.has(r.판매처)).length.toLocaleString());
   sv('mb-off',R.filter(r=>OFFLINE.has(r.판매처)).length.toLocaleString());
@@ -781,7 +780,7 @@ function updSKPI(){
   const{f,t}=getSRange();
   const rangeEl=el('sRangeLbl');
   if(rangeEl) rangeEl.textContent=f===t?f:f+' ~ '+t;
-  const R=filt(),sl=R.filter(r=>r.판매구분==='판매'),y=yd(),mSt=ms();
+  const R=filt().filter(r=>r.판매구분==='판매'),sl=R,y=yd(),mSt=ms();
   const rev=sm(sl,'판매가'),cnt=sl.length;
   const vl=sl.filter(r=>r.판매가>0);
   const avg=vl.length?sm(vl,'판매가')/vl.length:0;
@@ -789,7 +788,7 @@ function updSKPI(){
   const rM=R.filter(r=>r.날짜>=mSt&&r.날짜<=y&&r.판매구분==='판매').reduce((s,r)=>s+r.판매가,0);
   const roM=spM>0?Math.round(rM/spM*100):0;
   sv('p-rev',fW(rev));sv('p-revS',(MODE==='all'?'전체':MODE==='on'?'온라인':'오프라인')+' 판매 '+cnt+'건');
-  sv('p-cnt',cnt.toLocaleString()+'건');sv('p-cntS','');
+  sv('p-cnt',cnt.toLocaleString()+'건');sv('p-cntS','실 판매 기준');
   sv('p-avg',fW(avg));sv('p-ad',fW(spM));sv('p-adS',mSt.slice(0,7)+' 누계');
   sv('p-roas',roM>0?roM+'%':'—');
 }
@@ -831,10 +830,10 @@ function bPrMo(){const ms=[...new Set(filt().map(r=>r.월||'').filter(Boolean))]
 function setPRM(m){PRMO=m;bPrMo();rPrCh();rPrTbl();}
 
 // 집계
-function aggD(rows){const m={};rows.forEach(r=>{const d=r.날짜||'';if(!m[d]) m[d]={날짜:d,주문건수:0,판매건수:0,판매금액:0};m[d].주문건수++;if(r.판매구분==='판매'){m[d].판매건수++;m[d].판매금액+=r.판매가;}});return Object.values(m);}
-function aggM(rows){const m={};rows.forEach(r=>{const mo=r.월||'';if(!m[mo]) m[mo]={월:mo,주문건수:0,판매건수:0,판매금액:0,평균단가:0};m[mo].주문건수++;if(r.판매구분==='판매'){m[mo].판매건수++;m[mo].판매금액+=r.판매가;}});const a=Object.values(m);a.forEach(r=>{r.평균단가=r.판매건수>0?r.판매금액/r.판매건수:0;});return a;}
-function aggCh(rows){const m={};rows.forEach(r=>{const c=r.판매처||'기타';if(!m[c]) m[c]={판매처:c,주문건수:0,판매금액:0};m[c].주문건수++;if(r.판매구분==='판매') m[c].판매금액+=r.판매가;});return Object.values(m).sort((a,b)=>b.판매금액-a.판매금액);}
-function aggCat(rows){const m={};rows.forEach(r=>{const c=r.카테고리||'기타';if(!m[c]) m[c]={카테고리:c,주문건수:0,판매금액:0};m[c].주문건수++;if(r.판매구분==='판매') m[c].판매금액+=r.판매가;});const a=Object.values(m);a.sort((a,b)=>{const ai=CORD.indexOf(a.카테고리),bi=CORD.indexOf(b.카테고리);return(ai<0&&bi<0)?b.판매금액-a.판매금액:(ai<0)?1:(bi<0)?-1:ai-bi;});return a;}
+function aggD(rows){const m={};rows.forEach(r=>{const d=r.날짜||'';if(!m[d]) m[d]={날짜:d,주문건수:0,판매건수:0,판매금액:0};if(r.판매구분==='판매'){m[d].주문건수++;m[d].판매건수++;m[d].판매금액+=r.판매가;}});return Object.values(m);}
+function aggM(rows){const m={};rows.forEach(r=>{const mo=r.월||'';if(!m[mo]) m[mo]={월:mo,주문건수:0,판매건수:0,판매금액:0,평균단가:0};if(r.판매구분==='판매'){m[mo].주문건수++;m[mo].판매건수++;m[mo].판매금액+=r.판매가;}});const a=Object.values(m);a.forEach(r=>{r.평균단가=r.판매건수>0?r.판매금액/r.판매건수:0;});return a;}
+function aggCh(rows){const m={};rows.forEach(r=>{const c=r.판매처||'기타';if(!m[c]) m[c]={판매처:c,주문건수:0,판매금액:0};if(r.판매구분==='판매'){m[c].주문건수++;m[c].판매금액+=r.판매가;}});return Object.values(m).sort((a,b)=>b.판매금액-a.판매금액);}
+function aggCat(rows){const m={};rows.forEach(r=>{const c=r.카테고리||'기타';if(!m[c]) m[c]={카테고리:c,주문건수:0,판매금액:0};if(r.판매구분==='판매'){m[c].주문건수++;m[c].판매금액+=r.판매가;}});const a=Object.values(m);a.sort((a,b)=>{const ai=CORD.indexOf(a.카테고리),bi=CORD.indexOf(b.카테고리);return(ai<0&&bi<0)?b.판매금액-a.판매금액:(ai<0)?1:(bi<0)?-1:ai-bi;});return a;}
 
 function getDR(){let R=filt();if(DPROD!=='전체') R=R.filter(r=>r.카테고리===DPROD);const d=aggD(R);return sD(d);}
 function getMR(){let R=filt();if(MPROD!=='전체') R=R.filter(r=>r.카테고리===MPROD);return sM(aggM(R));}
@@ -858,7 +857,7 @@ function rDayTbl(){
     const adSp=adD.reduce((s,a)=>s+a.spend,0);
     const roas=adSp>0?Math.round(r.판매금액/adSp*100):'—';
     const adC=showAd?`<td class="adcol clk" onclick="event.stopPropagation();oDrAdDetail('${r.날짜}',null)">${adSp>0?'<span class=\"mono\" style=\"font-size:13px;cursor:pointer;\">'+fW(adSp)+'</span>':'<span class=\"mu2\">—</span>'}</td><td class="adcol">${roasBadge(roas)}</td>`:'';
-    return `<tr class="clk" onclick="oDrD('${r.날짜}')"><td class="mono" style="font-size:12px;color:var(--t2);">${r.날짜}</td><td style="font-size:12px;">${r.주문건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td style="font-size:12px;">${r.판매건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td><span class="mono" style="font-size:13px;font-weight:700;">${fW(r.판매금액)}</span>${dBadge(r.판매금액,prv)}</td>${adC}</tr>`;
+    return `<tr class="clk" onclick="oDrD('${r.날짜}')"><td class="mono" style="font-size:12px;color:var(--t2);">${r.날짜}</td><td style="font-size:12px;">${r.판매건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td><span class="mono" style="font-size:13px;font-weight:700;">${fW(r.판매금액)}</span>${dBadge(r.판매금액,prv)}</td>${adC}</tr>`;
   }).join('');
 }
 function rMoCh(){
@@ -876,7 +875,7 @@ function rMoTbl(){
     const adSp=adD.reduce((s,a)=>s+a.spend,0);
     const roas=adSp>0?Math.round(r.판매금액/adSp*100):'—';
     const adC=showAd?`<td class="adcol clk" onclick="event.stopPropagation();oDrAdDetail(null,'${moKey}')">${adSp>0?'<span class=\"mono\" style=\"font-size:13px;cursor:pointer;\">'+ fW(adSp)+'</span>':'<span class=\"mu2\">—</span>'}</td><td class="adcol">${roasBadge(roas)}</td>`:'';
-    return `<tr><td style="font-weight:600;font-size:13px;">${r.월}</td><td style="font-size:12px;">${r.주문건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td style="font-size:12px;">${r.판매건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td><span class="mono" style="font-size:13px;font-weight:700;">${fW(r.판매금액)}</span>${dBadge(r.판매금액,prv)}</td><td class="mono" style="font-size:12px;color:var(--t2);">${fW(r.평균단가)}</td>${adC}</tr>`;
+    return `<tr><td style="font-weight:600;font-size:13px;">${r.월}</td><td style="font-size:12px;">${r.판매건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td><span class="mono" style="font-size:13px;font-weight:700;">${fW(r.판매금액)}</span>${dBadge(r.판매금액,prv)}</td><td class="mono" style="font-size:12px;color:var(--t2);">${fW(r.평균단가)}</td>${adC}</tr>`;
   }).join('');
 }
 function rChCh(){
@@ -888,7 +887,7 @@ function rChCh(){
 function rChTbl(){
   const d=CHSO==='채널명'?[...getChR()].sort((a,b)=>a.판매처.localeCompare(b.판매처)):CHSO==='주문건수'?[...getChR()].sort((a,b)=>b.주문건수-a.주문건수):getChR();
   const tot=sm(d,'판매금액')||1;
-  el('tbCh').innerHTML=d.map(r=>`<tr class="clk" onclick="oDrCh('${r.판매처.replace(/'/g,"\\'")}')"><td><span class="chtag ${ctag(r.판매처)}">${r.판매처}</span></td><td style="font-size:12px;">${r.주문건수}건</td><td class="mono" style="font-weight:700;">${fW(r.판매금액)}</td><td><div class="bmw"><div class="bmt"><div class="bmf" style="width:${(r.판매금액/tot*100).toFixed(1)}%"></div></div><span class="bmp">${(r.판매금액/tot*100).toFixed(1)}%</span></div></td></tr>`).join('');
+  el('tbCh').innerHTML=d.map(r=>`<tr class="clk" onclick="oDrCh('${r.판매처.replace(/'/g,"\\'")}')"><td><span class="chtag ${ctag(r.판매처)}">${r.판매처}</span></td><td style="font-size:12px;">${r.주문건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td class="mono" style="font-weight:700;">${fW(r.판매금액)}</td><td><div class="bmw"><div class="bmt"><div class="bmf" style="width:${(r.판매금액/tot*100).toFixed(1)}%"></div></div><span class="bmp">${(r.판매금액/tot*100).toFixed(1)}%</span></div></td></tr>`).join('');
 }
 function rPrCh(){
   const d=getPrR();
@@ -900,7 +899,7 @@ function rPrTbl(){
   const d=getPrR(),tot=sm(d,'판매금액')||1;
   el('tbPr').innerHTML=d.map(r=>`<tr class="clk" onclick="oDrPr('${r.카테고리.replace(/'/g,"\\'")}')">
     <td style="font-weight:600;">${r.카테고리} <span style="font-size:10px;color:var(--acc);opacity:.6;">↗</span></td>
-    <td style="font-size:12px;">${r.주문건수}건</td>
+    <td style="font-size:12px;">${r.주문건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td>
     <td class="mono" style="font-weight:700;">${fW(r.판매금액)}</td>
     <td><div class="bmw"><div class="bmt"><div class="bmf" style="width:${(r.판매금액/tot*100).toFixed(1)}%"></div></div><span class="bmp">${(r.판매금액/tot*100).toFixed(1)}%</span></div></td>
   </tr>`).join('');
@@ -909,17 +908,15 @@ function rPrTbl(){
 function oDrPr(cat){
   let R=filt();
   if(PRMO!=='전체') R=R.filter(r=>r.월===PRMO);
-  const rows=R.filter(r=>r.카테고리===cat);
-  const srRows=rows.filter(r=>r.판매구분==='판매');
-  const totRev=sm(srRows,'판매가')||1;
+  const rows=R.filter(r=>r.카테고리===cat&&r.판매구분==='판매');
+  const totRev=sm(rows,'판매가')||1;
 
   // 채널별 집계
   const chM={};
   rows.forEach(r=>{
     const c=r.판매처||'기타';
     if(!chM[c]) chM[c]={c,n:0,v:0};
-    chM[c].n++;
-    if(r.판매구분==='판매') chM[c].v+=r.판매가;
+    chM[c].n++;chM[c].v+=r.판매가;
   });
   const chL=Object.values(chM).sort((a,b)=>b.v-a.v);
   const chTot=sm(chL,'v')||1;
@@ -929,13 +926,12 @@ function oDrPr(cat){
   rows.forEach(r=>{
     const name=r.상품명||'기타';
     if(!itemM[name]) itemM[name]={name,n:0,v:0};
-    itemM[name].n++;
-    if(r.판매구분==='판매') itemM[name].v+=r.판매가;
+    itemM[name].n++;itemM[name].v+=r.판매가;
   });
-  const itemL=Object.values(itemM).sort((a,b)=>b.v-a.v);
+  const itemL=Object.values(itemM).filter(i=>i.v>0).sort((a,b)=>b.v-a.v);
 
-  sv('dr-pr-t',`${cat}${PRMO!=='전체'?' · '+PRMO:''} 세부 내역`);
-  el('dr-pr-s').innerHTML=`<span>총 주문 <strong>${rows.length}건</strong></span><span>판매금액 <strong>${fW(sm(srRows,'판매가'))}</strong></span><span>상품 <strong>${itemL.length}종</strong></span>`;
+  sv('dr-pr-t', `${cat}${PRMO!=='전체'?' · '+PRMO:''} 세부 내역`);
+  el('dr-pr-s').innerHTML=`<span>판매 <strong>${rows.length}건</strong></span><span>판매금액 <strong>${fW(sm(rows,'판매가'))}</strong></span><span>상품 <strong>${itemL.length}종</strong></span>`;
 
   el('dr-pr-ch').innerHTML=chL.map(r=>`<tr>
     <td><span class="chtag ${ctag(r.c)}">${r.c}</span></td>
@@ -953,32 +949,35 @@ function oDrPr(cat){
   odr('pr');
 }
 
-// 드릴다운
 function oDrD(date){
   let R=filt();if(DPROD!=='전체') R=R.filter(r=>r.카테고리===DPROD);
-  const rows=R.filter(r=>r.날짜===date),sr=rows.filter(r=>r.판매구분==='판매');
+  // 판매 기준으로만 집계
+  const rows=R.filter(r=>r.날짜===date&&r.판매구분==='판매');
   const cM={},pM={};
-  rows.forEach(r=>{const c=r.판매처||'기타';if(!cM[c]) cM[c]={c,n:0,v:0};cM[c].n++;if(r.판매구분==='판매') cM[c].v+=r.판매가;});
-  rows.forEach(r=>{const c=r.카테고리||'기타';if(!pM[c]) pM[c]={c,n:0,v:0};pM[c].n++;if(r.판매구분==='판매') pM[c].v+=r.판매가;});
-  const cl=Object.values(cM).sort((a,b)=>b.v-a.v),pl=Object.values(pM).sort((a,b)=>b.v-a.v);
+  rows.forEach(r=>{const c=r.판매처||'기타';if(!cM[c]) cM[c]={c,n:0,v:0};cM[c].n++;cM[c].v+=r.판매가;});
+  rows.forEach(r=>{const c=r.카테고리||'기타';if(!pM[c]) pM[c]={c,n:0,v:0};pM[c].n++;pM[c].v+=r.판매가;});
+  // 판매금액 0인 항목 제외 후 정렬
+  const cl=Object.values(cM).sort((a,b)=>b.v-a.v);
+  const pl=Object.values(pM).filter(r=>r.v>0).sort((a,b)=>b.v-a.v);
   const ct=sm(cl,'v')||1,pt=sm(pl,'v')||1;
   sv('dr-d-t',`${date} 상세`);
-  el('dr-d-s').innerHTML=`<span>총 주문 <strong>${rows.length}건</strong></span><span>판매금액 <strong>${fW(sm(sr,'판매가'))}</strong></span>`;
+  el('dr-d-s').innerHTML=`<span>판매 <strong>${rows.length}건</strong></span><span>판매금액 <strong>${fW(sm(rows,'판매가'))}</strong></span>`;
   el('dr-d-ch').innerHTML=cl.map(r=>`<tr><td><span class="chtag ${ctag(r.c)}">${r.c}</span></td><td>${r.n}건</td><td class="mono">${fW(r.v)}</td><td><div class="bmw"><div class="bmt"><div class="bmf" style="width:${(r.v/ct*100).toFixed(1)}%"></div></div><span class="bmp">${(r.v/ct*100).toFixed(1)}%</span></div></td></tr>`).join('');
   el('dr-d-pr').innerHTML=pl.map(r=>`<tr><td style="font-weight:600;">${r.c}</td><td>${r.n}건</td><td class="mono">${fW(r.v)}</td><td><div class="bmw"><div class="bmt"><div class="bmf" style="width:${(r.v/pt*100).toFixed(1)}%"></div></div><span class="bmp">${(r.v/pt*100).toFixed(1)}%</span></div></td></tr>`).join('');
   odr('d');
 }
 function oDrCh(ch){
   let R=filt();if(CHMO!=='전체') R=R.filter(r=>r.월===CHMO);
-  const rows=R.filter(r=>r.판매처===ch);
-  const m={};rows.forEach(r=>{const k=r.상품명||'';if(!m[k]) m[k]={name:k,cat:r.카테고리||'기타',n:0,v:0};m[k].n++;if(r.판매구분==='판매') m[k].v+=r.판매가;});
-  const items=Object.values(m).sort((a,b)=>b.v-a.v);
-  const tot=sm(items,'v')||1,sa=rows.filter(r=>r.판매구분==='판매').reduce((s,r)=>s+r.판매가,0);
+  const rows=R.filter(r=>r.판매처===ch&&r.판매구분==='판매');
+  const m={};rows.forEach(r=>{const k=r.상품명||'';if(!m[k]) m[k]={name:k,cat:r.카테고리||'기타',n:0,v:0};m[k].n++;m[k].v+=r.판매가;});
+  const items=Object.values(m).filter(i=>i.v>0).sort((a,b)=>b.v-a.v);
+  const tot=sm(items,'v')||1,sa=rows.reduce((s,r)=>s+r.판매가,0);
   sv('dr-ch-t',`${ch}${CHMO!=='전체'?' · '+CHMO:''} 상품별`);
-  el('dr-ch-s').innerHTML=`<span>총 주문 <strong>${rows.length}건</strong></span><span>판매금액 <strong>${fW(sa)}</strong></span><span>상품 <strong>${items.length}종</strong></span>`;
+  el('dr-ch-s').innerHTML=`<span>판매 <strong>${rows.length}건</strong></span><span>판매금액 <strong>${fW(sa)}</strong></span><span>상품 <strong>${items.length}종</strong></span>`;
   el('dr-ch-b').innerHTML=items.map(i=>`<tr><td style="font-size:11px;color:var(--t2);">${i.cat}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i.name}</td><td>${i.n}건</td><td class="mono">${fW(i.v)}</td><td><div class="bmw"><div class="bmt"><div class="bmf" style="width:${(i.v/tot*100).toFixed(1)}%"></div></div><span class="bmp">${(i.v/tot*100).toFixed(1)}%</span></div></td></tr>`).join('');
   odr('ch');
 }
+
 function odr(id){const p=el('dr-'+id);p.classList.add('on');setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'nearest'}),50);}
 function cdr(id){el('dr-'+id).classList.remove('on');}
 
@@ -1062,7 +1061,7 @@ function oPGo(n){OPAGE=n;rOrd();}
 function cS(tbl,col,e){
   e.closest('thead').querySelectorAll('th').forEach(t=>t.classList.remove('sa','sd'));
   e.classList.add('sd');
-  if(tbl==='d'){const d=getDR().sort((a,b)=>typeof a[col]==='number'?b[col]-a[col]:String(b[col]).localeCompare(String(a[col])));el('tbD').innerHTML=d.map((r,i)=>{const prv=d[i+1]?d[i+1].판매금액:null;const adD=AD.filter(a=>a.date===r.날짜),adSp=adD.reduce((s,a)=>s+a.spend,0);const roas=adSp>0?Math.round(r.판매금액/adSp*100):'—';const adC=MODE==='all'?`<td class="adcol mono" style="font-size:12px;">${adSp>0?fW(adSp):'<span class="mu2">—</span>'}</td><td class="adcol">${roasBadge(roas)}</td>`:'';return `<tr class="clk" onclick="oDrD('${r.날짜}')"><td class="mono" style="font-size:12px;color:var(--t2);">${r.날짜}</td><td style="font-size:12px;">${r.주문건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td style="font-size:12px;">${r.판매건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td><span class="mono" style="font-size:13px;font-weight:700;">${fW(r.판매금액)}</span>${dBadge(r.판매금액,prv)}</td>${adC}</tr>`;}).join('');}
+  if(tbl==='d'){const d=getDR().sort((a,b)=>typeof a[col]==='number'?b[col]-a[col]:String(b[col]).localeCompare(String(a[col])));el('tbD').innerHTML=d.map((r,i)=>{const prv=d[i+1]?d[i+1].판매금액:null;const adD=AD.filter(a=>a.date===r.날짜),adSp=adD.reduce((s,a)=>s+a.spend,0);const roas=adSp>0?Math.round(r.판매금액/adSp*100):'—';const adC=MODE==='all'?`<td class="adcol mono" style="font-size:12px;">${adSp>0?fW(adSp):'<span class="mu2">—</span>'}</td><td class="adcol">${roasBadge(roas)}</td>`:'';return `<tr class="clk" onclick="oDrD('${r.날짜}')"><td class="mono" style="font-size:12px;color:var(--t2);">${r.날짜}</td><td style="font-size:12px;">${r.판매건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td><span class="mono" style="font-size:13px;font-weight:700;">${fW(r.판매금액)}</span>${dBadge(r.판매금액,prv)}</td>${adC}</tr>`;}).join('');}
 }
 
 // ── 광고 탭 ──────────────────────────────────────────────
