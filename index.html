@@ -521,8 +521,8 @@ tr:hover td{background:#fafbff;}
 const API_URL='https://script.google.com/macros/s/AKfycbyNu9qecmZshlw_xRWjMTFsJuARTRFZ9tIkbaE9Xuhf9sADN55dexkejdZ2KP5wYDFF6Q/exec';
 const PAL=['#6366f1','#06b6d4','#10b981','#f59e0b','#8b5cf6','#ef4444','#3b82f6','#ec4899','#14b8a6','#84cc16'];
 const OFFLINE=new Set(['베이비하우스','링크맘','에이블베이비','바베파파','베이비파크','오덴세','쁘띠라운지','베이비스토어','에스앤비커머스','디에스컴퍼니','베이비스토리','토이앤맘']);
-const CORD=['크레오','밀리','미로','미로 시딩','자리맥스','자리','지기','줌라이트','피피백','B급 크레오','B급 자리맥스','B급 줌라이트','크레오 ACC','밀리 ACC','미로 ACC','자리맥스 ACC','자리 ACC','지기 ACC','컵홀더','파라솔','핸드머프','풋머프','스너글','블랭킷','트렌디백','트래블키트','자리스포츠','B급','기타'];
-const CMAIN=new Set(['크레오','밀리','미로','자리맥스','자리','지기','줌라이트','피피백']);
+const CORD=['크레오','밀리','미로','미로 시딩','자리맥스','자리','지기','줌라이트','기저귀 가방','기저귀 가방 포켓','B급 크레오','B급 자리맥스','B급 줌라이트','크레오 ACC','밀리 ACC','미로 ACC','자리맥스 ACC','자리 ACC','지기 ACC','컵홀더','파라솔','핸드머프','풋머프','스너글','블랭킷','트렌디백','트래블키트','자리스포츠','B급','기타'];
+const CMAIN=new Set(['크레오','밀리','미로','자리맥스','자리','지기','줌라이트','기저귀 가방']);
 const CACC=new Set(['크레오 ACC','밀리 ACC','미로 ACC','자리맥스 ACC','자리 ACC','지기 ACC','컵홀더','파라솔','핸드머프','풋머프','스너글','블랭킷','트렌디백','트래블키트','자리스포츠','기타']);
 const CB=new Set(['B급 크레오','B급 자리맥스','B급 줌라이트','B급']);
 
@@ -1335,7 +1335,7 @@ function catFn(name){
   if(/미로.*(멀티커버|핸들바|안전바|카시트|방충망|시력보호|보낭|컵홀더)/.test(n)) return '미로 ACC';
   if(/밀리.*(멀티커버|방충망|이너시트|안전바|컵홀더)/.test(n)&&!/세트/.test(n)) return '밀리 ACC';
   if(/지기.*(핸들바|안전바|방충망|풋레스트|카시트|시력보호)/.test(n)) return '지기 ACC';
-  if(/트렌디백|기저귀가방/.test(n)) return '트렌디백';if(/피피백/.test(n)) return '피피백';if(/컵홀더/.test(n)) return '컵홀더';if(/파라솔/.test(n)) return '파라솔';if(/핸드머프/.test(n)) return '핸드머프';if(/풋머프/.test(n)) return '풋머프';if(/스너글|뉴본/.test(n)) return '스너글';if(/블랭킷/.test(n)) return '블랭킷';if(/트래블키트/.test(n)) return '트래블키트';if(isB) return 'B급';return '기타';
+  if(/기저귀 가방 포켓|기저귀가방포켓/.test(n)) return '기저귀 가방 포켓';if(/피피백|기저귀가방|기저귀백|기저귀 가방/.test(n)) return '기저귀 가방';if(/컵홀더/.test(n)) return '컵홀더';if(/파라솔/.test(n)) return '파라솔';if(/핸드머프/.test(n)) return '핸드머프';if(/풋머프/.test(n)) return '풋머프';if(/스너글|뉴본/.test(n)) return '스너글';if(/블랭킷/.test(n)) return '블랭킷';if(/트래블키트/.test(n)) return '트래블키트';if(isB) return 'B급';return '기타';
 }
 
 // ── 초기화 ───────────────────────────────────────────────
