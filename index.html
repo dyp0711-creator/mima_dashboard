@@ -37,6 +37,7 @@ body{background:var(--bg);color:var(--t1);font-family:'Noto Sans KR',sans-serif;
 .chip-ok{background:var(--grn-l);color:#065f46;}
 .chip-info{background:var(--acc-l);color:#3730a3;}
 .chip-err{background:var(--red-l);color:#991b1b;}
+.chip-warn{background:rgba(245,158,11,.15);color:#92400e;}
 /* NAV TABS */
 .nav{background:var(--sur);border-bottom:1px solid var(--bor);padding:0 28px;display:flex;}
 .ntab{background:none;border:none;border-bottom:2px solid transparent;color:var(--t2);padding:12px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;margin-bottom:-1px;}
@@ -505,7 +506,8 @@ const OLD_AD_API_URL='https://script.google.com/macros/s/AKfycbwFK7LmUCcC_aFfjq7
 // 기존 종합요약/판매 탭이 기대하는 평탄한 {date,media,campaign,spend,...} 행 배열로 변환.
 // (종합요약/판매 탭은 이 AD 배열을 날짜별로 필터링해서 광고비/ROAS를 같이 보여준다)
 const AD_CHANNEL_TO_MEDIA = {
-  '브랜드검색':'네이버','쇼핑검색':'네이버','파워링크':'네이버','배너':'네이버','애드부스트':'네이버','NDA':'네이버','META':'메타'
+  '브랜드검색':'네이버','쇼핑검색':'네이버','파워링크':'네이버','배너':'네이버','애드부스트':'네이버','NDA':'네이버','META':'메타',
+  '카카오':'카카오','구글':'구글','기타':'기타'
 };
 function buildFlatADFromChannels(dailyByChannel){
   const rows=[];
@@ -524,6 +526,56 @@ function buildFlatADFromChannels(dailyByChannel){
     });
   });
   return rows;
+}
+
+// 채널별 합계(dailyByChannel)를 다 더한 값이, SUMMARY의 진짜 전체 합계(daily)와 안 맞을 때(예: 특정 채널 시트
+// 이름이 안 맞아서 누락됐을 때) 그 차이만큼 "미분류" 매체로 자동으로 채워준다. -
+// 이러면 카카오/구글 등 특정 채널 인식에 문제가 있어도 판매 대시보드의 "총 광고비"는 항상 정확히 일치한다.
+function reconcileAdTotals(dailyTotal, dailyByChannel){
+  const byDateChannelSum = {};
+  Object.entries(dailyByChannel).forEach(([channel, rows])=>{
+    (rows||[]).forEach(r=>{
+      const key = r['기간'];
+      if(!byDateChannelSum[key]) byDateChannelSum[key] = {spend:0, impressions:0, clicks:0};
+      byDateChannelSum[key].spend += (typeof r['광고비']==='number' ? r['광고비'] : 0);
+      byDateChannelSum[key].impressions += (typeof r['노출']==='number' ? r['노출'] : 0);
+      byDateChannelSum[key].clicks += (typeof r['클릭']==='number' ? r['클릭'] : 0);
+    });
+  });
+  const extraRows = [];
+  (dailyTotal||[]).forEach(r=>{
+    const key = r['기간'];
+    if(!/^\d{4}-\d{2}-\d{2}/.test(String(key||''))) return; // "당월 Total" 같은 요약행은 날짜가 아니므로 제외
+    const trueSpend = typeof r['광고비']==='number' ? r['광고비'] : 0;
+    const trueImpr = typeof r['노출수']==='number' ? r['노출수'] : (typeof r['노출']==='number' ? r['노출'] : 0);
+    const trueClicks = typeof r['클릭수']==='number' ? r['클릭수'] : (typeof r['클릭']==='number' ? r['클릭'] : 0);
+    const got = byDateChannelSum[key] || {spend:0, impressions:0, clicks:0};
+    const gapSpend = trueSpend - got.spend;
+    if(Math.abs(gapSpend) > 1){
+      extraRows.push({
+        date:key, media:'미분류', campaign:null,
+        spend:gapSpend, impressions:trueImpr-got.impressions, clicks:trueClicks-got.clicks,
+        convRevenue:0, purchases:0, hasRev:false,
+      });
+    }
+  });
+  return extraRows;
+}
+
+// 종합요약/판매 탭의 "총 광고비/ROAS" 등 순수 합계는 채널 매핑(dailyByChannel) 완전성에 기대지 않고
+// 광고 탭이 쓰는 것과 동일한 원천(AD_RAW.daily = SUMMARY의 진짜 전체 합계)에서 직접 가져온다.
+// 매체별 세부 내역이 필요한 화면(미디어별 카드, 광고비 세부 드릴다운 등)은 계속 AD(평탄 배열)를 사용한다.
+function adRawTotal(f, t){
+  const out = {spend:0, impressions:0, clicks:0};
+  (AD_RAW.daily||[]).forEach(r=>{
+    const d = r['기간'] instanceof Date ? r['기간'] : new Date(r['기간']);
+    const s = AD_dateStr(d);
+    if(!s || s<f || s>t) return;
+    out.spend += (typeof r['광고비']==='number' ? r['광고비'] : 0);
+    out.impressions += (typeof r['노출수']==='number' ? r['노출수'] : (typeof r['노출']==='number' ? r['노출'] : 0));
+    out.clicks += (typeof r['클릭수']==='number' ? r['클릭수'] : (typeof r['클릭']==='number' ? r['클릭'] : 0));
+  });
+  return out;
 }
 const PAL=['#6366f1','#06b6d4','#10b981','#f59e0b','#8b5cf6','#ef4444','#3b82f6','#ec4899','#14b8a6','#84cc16'];
 
@@ -563,6 +615,9 @@ function AD_mergeOldData(oldRows){
       d['전환수']+=r.purchases||0; d['매출']+=r.convRevenue||0;
     });
     AD_RAW.dailyByChannel['META_MIMA'] = Object.values(byDate).sort((a,b)=>a['기간']-b['기간']);
+    metaMimaRows.forEach(r=>{ // 광고 탭 전체 KPI 합계에도 반영 (같은 날짜는 더해서 합산, 중복 줄 생성 방지)
+      AD_upsertAdd(AD_RAW.daily, r.date, ['노출수','클릭수','광고비','전환수','매출'], [r.impressions||0, r.clicks||0, r.spend||0, r.purchases||0, r.convRevenue||0]);
+    });
     if(!AD_LEAF_CHANNELS.some(c=>c.name==='META_MIMA')) AD_LEAF_CHANNELS.push({name:'META_MIMA', group:'META'});
     addedCount += metaMimaRows.length;
   }
@@ -586,15 +641,10 @@ function AD_mergeOldData(oldRows){
     });
     if(!AD_RAW.dailyByChannel['META_NAVER']) AD_RAW.dailyByChannel['META_NAVER']=[];
     AD_RAW.dailyByChannel['META_NAVER'].push(...Object.values(byDate));
-    // 5월분은 AD_RAW.daily(전체 일별 추이)에도 날짜별 합계로 반영
-    const byDateAll={};
+    // 5월분은 AD_RAW.daily(전체 일별 추이)에도 날짜별로 더해서 반영 (같은 날짜 중복 줄 생성 방지)
     metaNaverMay.forEach(r=>{
-      if(!byDateAll[r.date]) byDateAll[r.date]={'기간':new Date(r.date),'노출수':0,'클릭수':0,'광고비':0,'전환수':0,'매출':0};
-      const d=byDateAll[r.date];
-      d['노출수']+=r.impressions||0; d['클릭수']+=r.clicks||0; d['광고비']+=r.spend||0;
-      d['전환수']+=r.purchases||0; d['매출']+=r.convRevenue||0;
+      AD_upsertAdd(AD_RAW.daily, r.date, ['노출수','클릭수','광고비','전환수','매출'], [r.impressions||0, r.clicks||0, r.spend||0, r.purchases||0, r.convRevenue||0]);
     });
-    AD_RAW.daily.push(...Object.values(byDateAll));
     addedCount += metaNaverMay.length;
   }
 
@@ -641,6 +691,9 @@ function AD_mergeOldData(oldRows){
   if(brandRows.length){
     AD.push(...brandRows);
     mergeIntoChannel(brandRows, '브랜드검색');
+    brandRows.forEach(r=>{ // 전체 KPI 합계에도 반영
+      AD_upsertAdd(AD_RAW.daily, r.date, ['노출수','클릭수','광고비','전환수','매출'], [r.impressions||0, r.clicks||0, r.spend||0, r.purchases||0, r.convRevenue||0]);
+    });
     addedCount += brandRows.length;
   }
 
@@ -655,9 +708,13 @@ function AD_mergeOldData(oldRows){
         AD_LEAF_CHANNELS.push({name:media, group:'이전 데이터(~5월)'});
       }
     });
+    restRows.forEach(r=>{ // 전체 KPI 합계에도 반영
+      AD_upsertAdd(AD_RAW.daily, r.date, ['노출수','클릭수','광고비','전환수','매출'], [r.impressions||0, r.clicks||0, r.spend||0, r.purchases||0, r.convRevenue||0]);
+    });
     addedCount += restRows.length;
   }
 
+  AD_RAW.daily.sort((a,b)=>a['기간']-b['기간']);
   return addedCount;
 }
 
@@ -698,10 +755,15 @@ async function loadAll(){
   if(!url){chips([{t:'URL을 입력해주세요',c:'chip-err'}]);return;}
   const btn=el('loadBtn');
   btn.disabled=true;btn.textContent='불러오는 중...';
-  chips([{t:'🔄 판매 로드 중...',c:'chip-info'}]);
+  chips([{t:'🔄 판매·광고 동시 로드 중...',c:'chip-info'}]);
   try{
+    // 판매/현재광고/이전광고 3개는 서로 무관한 요청이라 순서대로 기다리지 않고 동시에 쏴서 시간을 줄인다.
+    const srPromise=fetch(url,{redirect:'follow'});
+    const arPromise=fetch(AD_API_URL+(AD_API_URL.includes('?')?'&':'?')+'_='+Date.now(),{redirect:'follow',cache:'no-store'});
+    const oarPromise=fetch(OLD_AD_API_URL+(OLD_AD_API_URL.includes('?')?'&':'?')+'_='+Date.now(),{redirect:'follow',cache:'no-store'}).catch(e=>{console.warn('이전 광고 데이터 요청 실패:',e);return null;});
+
     // 판매
-    const sr=await fetch(url,{redirect:'follow'});
+    const sr=await srPromise;
     const sj=JSON.parse(await sr.text());
     S=(sj.rows||[]).map(r=>{
       const price=+r.판매가||0;
@@ -711,25 +773,34 @@ async function loadAll(){
       if(cat==='미로'&&price>=200000&&price<=300000) cat='미로 시딩';
       return{...r,판매가:price,수량:+r.수량||1,카테고리:cat};
     });
-    chips([{t:`✅ 판매 ${S.length}건`,c:'chip-ok'},{t:'🔄 광고 로드 중...',c:'chip-info'}]);
+    chips([{t:`✅ 판매 ${S.length}건`,c:'chip-ok'},{t:'🔄 광고 처리 중...',c:'chip-info'}]);
+
     // 광고 (현재: 6월~)
-    const ar=await fetch(AD_API_URL+(AD_API_URL.includes('?')?'&':'?')+'_='+Date.now(),{redirect:'follow',cache:'no-store'});
+    const ar=await arPromise;
     const aj=JSON.parse(await ar.text());
     if(aj.error) throw new Error('광고 데이터 오류: '+aj.error);
     AD_applyData(aj); // 새 광고 탭(AD_RAW) 렌더링용
     AD=buildFlatADFromChannels(aj.dailyByChannel||{}); // 종합요약/판매 탭 광고비 연동용 평탄화 배열
+    const reconciledRows = reconcileAdTotals(aj.daily||[], aj.dailyByChannel||{});
+    AD.push(...reconciledRows); // 채널별 합계 누락분을 SUMMARY 전체 합계로 자동 보정
 
     // 광고 (이전: ~5월, 카카오/네이버/메타 대분류) - 있으면 병합, 실패해도 전체 로드는 계속 진행
     let oldAdCount=0;
     try{
-      const oar=await fetch(OLD_AD_API_URL+(OLD_AD_API_URL.includes('?')?'&':'?')+'_='+Date.now(),{redirect:'follow',cache:'no-store'});
-      const oaj=JSON.parse(await oar.text());
-      if(!oaj.error && Array.isArray(oaj.rows)){
-        oldAdCount=AD_mergeOldData(oaj.rows);
+      const oar=await oarPromise;
+      if(oar){
+        const oaj=JSON.parse(await oar.text());
+        if(!oaj.error && Array.isArray(oaj.rows)){
+          oldAdCount=AD_mergeOldData(oaj.rows);
+        }
       }
     }catch(oerr){ console.warn('이전 광고 데이터 로드 실패(무시하고 계속):', oerr); }
 
     const cs=[{t:`✅ 판매 ${S.length}건`,c:'chip-ok'},{t:`✅ 광고 ${AD.length}건`+(oldAdCount?` (이전 ${oldAdCount}건 포함)`:``),c:'chip-ok'}];
+    if(reconciledRows.length){
+      const gapSum = reconciledRows.reduce((s,r)=>s+r.spend,0);
+      cs.push({t:`⚠ 매체별 세부에 미분류 ${fW(Math.round(gapSum))} (총합계는 정확함)`, c:'chip-warn'});
+    }
     chips(cs);
     const now=new Date();
     sv('syncTxt','최종 갱신 '+now.toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}));
@@ -808,10 +879,10 @@ function rSum(){
 
   const sY=S.filter(r=>r.날짜===y&&r.판매구분==='판매');
   const sPY=S.filter(r=>r.날짜===py&&r.판매구분==='판매');
-  const adY=AD.filter(r=>r.date===y);
-  const adPY=AD.filter(r=>r.date===py);
+  const adY=adRawTotal(y,y);
+  const adPY=adRawTotal(py,py);
   const rY=sm(sY,'판매가'),rPY=sm(sPY,'판매가');
-  const aY=sm(adY,'spend'),aPY=sm(adPY,'spend');
+  const aY=adY.spend,aPY=adPY.spend;
   const roasY=aY>0?Math.round(rY/aY*100):0;
   const roasPY=aPY>0?Math.round(rPY/aPY*100):0;
 
@@ -830,13 +901,13 @@ function rSum(){
   const sM=S.filter(r=>r.날짜>=mS&&r.날짜<=y&&r.판매구분==='판매');
   const pm=prevMo(mS);
   const sMp=S.filter(r=>r.날짜>=pm.s&&r.날짜<=pm.e&&r.판매구분==='판매');
-  const adM=AD.filter(r=>r.date>=mS&&r.date<=y);
-  const adMp=AD.filter(r=>r.date>=pm.s&&r.date<=pm.e);
+  const adM=adRawTotal(mS,y);
+  const adMp=adRawTotal(pm.s,pm.e);
   const rM=sm(sM,'판매가'),rMp=sm(sMp,'판매가');
-  const spM=sm(adM,'spend'),spMp=sm(adMp,'spend');
+  const spM=adM.spend,spMp=adMp.spend;
   const adR=rM>0?spM/rM*100:0,adRp=rMp>0?spMp/rMp*100:0;
   const roasM=spM>0?rM/spM*100:0,roapM=spMp>0?rMp/spMp*100:0;
-  const imM=sm(adM,'impressions'),clM=sm(adM,'clicks');
+  const imM=adM.impressions,clM=adM.clicks;
   const ctrM=imM>0?clM/imM*100:0;
   const cpcM=clM>0?spM/clM:0;
 
@@ -844,7 +915,10 @@ function rSum(){
   for(let i=0;i<30;i++){days30.unshift(dd.toISOString().slice(0,10));dd.setDate(dd.getDate()-1);}
   const rbD={},sbD={};
   S.filter(r=>r.판매구분==='판매').forEach(r=>{if(days30.includes(r.날짜)) rbD[r.날짜]=(rbD[r.날짜]||0)+r.판매가;});
-  AD.forEach(r=>{if(days30.includes(r.date)) sbD[r.date]=(sbD[r.date]||0)+r.spend;});
+  AD_RAW.daily.forEach(r=>{
+    const ds=AD_dateStr(r['기간'] instanceof Date ? r['기간'] : new Date(r['기간']));
+    if(ds && days30.includes(ds)) sbD[ds]=(sbD[ds]||0)+(typeof r['광고비']==='number'?r['광고비']:0);
+  });
 
   const spDefs=[
     {l:'판매금액',v:fW(rM),c:[rM,rMp],sc:'#6366f1',d:days30.map(d=>rbD[d]||0)},
@@ -893,7 +967,7 @@ function rSum(){
   if(best&&rM>0) ins.push({tag:'정보',ttl:`이번 달 베스트셀러: ${best[0]} ${fW(best[1])} (${(best[1]/rM*100).toFixed(0)}%)`,ds:'재고 확보 및 관련 상품 광고 소재 활용을 고려하세요.'});
   const topCh=Object.entries(chMo).sort((a,b)=>b[1]-a[1])[0];
   if(topCh&&rM>0) ins.push({tag:'정보',ttl:`매출의 ${(topCh[1]/rM*100).toFixed(0)}%가 '${topCh[0]}'에 집중 (${fW(topCh[1])})`,ds:'주력 채널이 안정적으로 기여하고 있습니다. 차순위 채널 성장 여지를 점검하세요.'});
-  const mdc={};AD.filter(r=>r.date>=mS&&r.date<=y).forEach(r=>{if(!mdc[r.media]) mdc[r.media]={sp:0,cl:0};mdc[r.media].sp+=r.spend;mdc[r.media].cl+=r.clicks;});
+  const mdc={};AD.filter(r=>r.date>=mS&&r.date<=y&&r.media!=='미분류').forEach(r=>{if(!mdc[r.media]) mdc[r.media]={sp:0,cl:0};mdc[r.media].sp+=r.spend;mdc[r.media].cl+=r.clicks;});
   const cpcE=Object.entries(mdc).filter(([,v])=>v.cl>0).map(([m,v])=>([m,v.sp/v.cl])).sort((a,b)=>a[1]-b[1]);
   if(cpcE.length>=2){const lo=cpcE[0],hi=cpcE[cpcE.length-1];ins.push({tag:'정보',ttl:`전환당 비용: ${lo[0]} ${fW(Math.round(lo[1]))}(최저) vs ${hi[0]} ${fW(Math.round(hi[1]))}(최고)`,ds:`${hi[0]}는 타겟·소재·입찰 점검 또는 예산 축소를 검토하세요.`});}
   const campD={};
@@ -928,7 +1002,7 @@ function updSKPI(){
   const rev=sm(sl,'판매가'),cnt=sl.length;
   const vl=sl.filter(r=>r.판매가>0);
   const avg=vl.length?sm(vl,'판매가')/vl.length:0;
-  const spM=AD.filter(r=>r.date>=mSt&&r.date<=y).reduce((s,r)=>s+r.spend,0);
+  const spM=adRawTotal(mSt,y).spend;
   const rM=R.filter(r=>r.날짜>=mSt&&r.날짜<=y&&r.판매구분==='판매').reduce((s,r)=>s+r.판매가,0);
   const roM=spM>0?Math.round(rM/spM*100):0;
   sv('p-rev',fW(rev));sv('p-revS',(MODE==='all'?'전체':MODE==='on'?'온라인':'오프라인')+' 판매 '+cnt+'건');
@@ -997,8 +1071,7 @@ function rDayTbl(){
   const d=getDR(),showAd=MODE==='all';
   el('tbD').innerHTML=d.map((r,i)=>{
     const prv=d[i+1]?d[i+1].판매금액:null;
-    const adD=AD.filter(a=>a.date===r.날짜);
-    const adSp=adD.reduce((s,a)=>s+a.spend,0);
+    const adSp=adRawTotal(r.날짜,r.날짜).spend;
     const roas=adSp>0?Math.round(r.판매금액/adSp*100):'—';
     const adC=showAd?`<td class="adcol clk" onclick="event.stopPropagation();oDrAdDetail('${r.날짜}',null)">${adSp>0?'<span class=\"mono\" style=\"font-size:13px;cursor:pointer;\">'+fW(adSp)+'</span>':'<span class=\"mu2\">—</span>'}</td><td class="adcol">${roasBadge(roas)}</td>`:'';
     return `<tr class="clk" onclick="oDrD('${r.날짜}')"><td class="mono" style="font-size:12px;color:var(--t2);">${r.날짜}</td><td style="font-size:12px;">${r.판매건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td><span class="mono" style="font-size:13px;font-weight:700;">${fW(r.판매금액)}</span>${dBadge(r.판매금액,prv)}</td>${adC}</tr>`;
@@ -1015,8 +1088,7 @@ function rMoTbl(){
   el('tbM').innerHTML=d.map((r,i)=>{
     const prv=d[i+1]?d[i+1].판매금액:null;
     const moKey=String(r.월).trim();
-    const adD=AD.filter(a=>a.date&&a.date.slice(0,7)===moKey);
-    const adSp=adD.reduce((s,a)=>s+a.spend,0);
+    const adSp=adRawTotal(moKey+'-01', moKey+'-31').spend;
     const roas=adSp>0?Math.round(r.판매금액/adSp*100):'—';
     const adC=showAd?`<td class="adcol clk" onclick="event.stopPropagation();oDrAdDetail(null,'${moKey}')">${adSp>0?'<span class=\"mono\" style=\"font-size:13px;cursor:pointer;\">'+ fW(adSp)+'</span>':'<span class=\"mu2\">—</span>'}</td><td class="adcol">${roasBadge(roas)}</td>`:'';
     return `<tr><td style="font-weight:600;font-size:13px;">${r.월}</td><td style="font-size:12px;">${r.판매건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td><span class="mono" style="font-size:13px;font-weight:700;">${fW(r.판매금액)}</span>${dBadge(r.판매금액,prv)}</td><td class="mono" style="font-size:12px;color:var(--t2);">${fW(r.평균단가)}</td>${adC}</tr>`;
@@ -1205,7 +1277,7 @@ function oPGo(n){OPAGE=n;rOrd();}
 function cS(tbl,col,e){
   e.closest('thead').querySelectorAll('th').forEach(t=>t.classList.remove('sa','sd'));
   e.classList.add('sd');
-  if(tbl==='d'){const d=getDR().sort((a,b)=>typeof a[col]==='number'?b[col]-a[col]:String(b[col]).localeCompare(String(a[col])));el('tbD').innerHTML=d.map((r,i)=>{const prv=d[i+1]?d[i+1].판매금액:null;const adD=AD.filter(a=>a.date===r.날짜),adSp=adD.reduce((s,a)=>s+a.spend,0);const roas=adSp>0?Math.round(r.판매금액/adSp*100):'—';const adC=MODE==='all'?`<td class="adcol mono" style="font-size:12px;">${adSp>0?fW(adSp):'<span class="mu2">—</span>'}</td><td class="adcol">${roasBadge(roas)}</td>`:'';return `<tr class="clk" onclick="oDrD('${r.날짜}')"><td class="mono" style="font-size:12px;color:var(--t2);">${r.날짜}</td><td style="font-size:12px;">${r.판매건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td><span class="mono" style="font-size:13px;font-weight:700;">${fW(r.판매금액)}</span>${dBadge(r.판매금액,prv)}</td>${adC}</tr>`;}).join('');}
+  if(tbl==='d'){const d=getDR().sort((a,b)=>typeof a[col]==='number'?b[col]-a[col]:String(b[col]).localeCompare(String(a[col])));el('tbD').innerHTML=d.map((r,i)=>{const prv=d[i+1]?d[i+1].판매금액:null;const adSp=adRawTotal(r.날짜,r.날짜).spend;const roas=adSp>0?Math.round(r.판매금액/adSp*100):'—';const adC=MODE==='all'?`<td class="adcol mono" style="font-size:12px;">${adSp>0?fW(adSp):'<span class="mu2">—</span>'}</td><td class="adcol">${roasBadge(roas)}</td>`:'';return `<tr class="clk" onclick="oDrD('${r.날짜}')"><td class="mono" style="font-size:12px;color:var(--t2);">${r.날짜}</td><td style="font-size:12px;">${r.판매건수}<span style="font-size:10px;color:var(--t3);"> 건</span></td><td><span class="mono" style="font-size:13px;font-weight:700;">${fW(r.판매금액)}</span>${dBadge(r.판매금액,prv)}</td>${adC}</tr>`;}).join('');}
 }
 
 // ── 광고 탭 (신규 디자인, AD_ 네임스페이스) ──────────────────────────────────────────────
@@ -1305,16 +1377,25 @@ const AD_LEAF_CHANNELS = [
   { name:'브랜드검색', group:'네이버 검색광고' },
   { name:'쇼핑검색', group:'네이버 검색광고' },
   { name:'파워링크', group:'네이버 검색광고' },
-  { name:'애드부스트', group:'네이버 GFA' },
-  { name:'NDA', group:'네이버 GFA' },
+  { name:'애드부스트+NDA', group:'네이버 GFA', sourceKey:'애드부스트' },
   { name:'배너', group:'네이버 GFA' },
   { name:'META_NAVER', group:'META' },
+  { name:'카카오', group:'기타 매체' },
+  { name:'구글', group:'기타 매체' },
+  { name:'기타', group:'기타 매체' },
 ];
+
+// 화면에 보이는 채널명 -> AD_RAW.dailyByChannel 안의 실제 원본 키로 변환
+// (애드부스트+NDA는 원본 시트가 공유돼 있어 '애드부스트' 키의 데이터를 그대로 사용)
+function AD_resolveChannelKey(name){
+  const found = AD_LEAF_CHANNELS.find(c=>c.name===name);
+  return found && found.sourceKey ? found.sourceKey : name;
+}
 
 function AD_groupTopChannels(){
   const {f,t} = AD_getAR();
-  return AD_LEAF_CHANNELS.map(({name, group})=>{
-    const rows = AD_filterRange(AD_RAW.dailyByChannel[name]||[], f, t);
+  return AD_LEAF_CHANNELS.map(({name, group, sourceKey})=>{
+    const rows = AD_filterRange(AD_RAW.dailyByChannel[sourceKey || name]||[], f, t);
     const g = {'캠페인명':name, group, '노출':0,'클릭':0,'광고비':0,'전환수':0,'매출':0};
     rows.forEach(r=>{
       g['노출'] += AD_n(r['노출']);
@@ -1425,7 +1506,7 @@ function AD_renderChannelPie(){
   const chData = AD_groupTopChannels();
   const labels = chData.map(r=>r['캠페인명']);
   const spend = chData.map(r=>AD_n(r['광고비']));
-  const colorMap = {'브랜드검색':'#6366f1','쇼핑검색':'#a5b4fc','파워링크':'#c7d2fe','애드부스트':'#10b981','NDA':'#34d399','배너':'#6ee7b7','META_NAVER':'#f59e0b','META_MIMA':'#0ea5e9','카카오':'#eab308','네이버':'#3b82f6','메타':'#8b5cf6'};
+  const colorMap = {'브랜드검색':'#6366f1','쇼핑검색':'#a5b4fc','파워링크':'#c7d2fe','애드부스트+NDA':'#10b981','배너':'#6ee7b7','META_NAVER':'#f59e0b','META_MIMA':'#0ea5e9','카카오':'#eab308','네이버':'#3b82f6','메타':'#8b5cf6','구글':'#ef4444','기타':'#9ca3af'};
   const colors = labels.map(l=>colorMap[l]||'#9ca3af');
 
   if(AD_charts.pie) AD_charts.pie.destroy();
@@ -1443,7 +1524,7 @@ function AD_renderRoasChart(){
   const chData = AD_groupTopChannels();
   const labels = chData.map(r=>r['캠페인명']);
   const roas = chData.map(r=> r['광고비']>0 ? (AD_n(r['매출']))/r['광고비'] : 0 );
-  const colorMap = {'브랜드검색':'#6366f1','쇼핑검색':'#a5b4fc','파워링크':'#c7d2fe','애드부스트':'#10b981','NDA':'#34d399','배너':'#6ee7b7','META_NAVER':'#f59e0b','META_MIMA':'#0ea5e9','카카오':'#eab308','네이버':'#3b82f6','메타':'#8b5cf6'};
+  const colorMap = {'브랜드검색':'#6366f1','쇼핑검색':'#a5b4fc','파워링크':'#c7d2fe','애드부스트+NDA':'#10b981','배너':'#6ee7b7','META_NAVER':'#f59e0b','META_MIMA':'#0ea5e9','카카오':'#eab308','네이버':'#3b82f6','메타':'#8b5cf6','구글':'#ef4444','기타':'#9ca3af'};
   const colors = labels.map(l=>colorMap[l]||'#9ca3af');
 
   if(AD_charts.roas) AD_charts.roas.destroy();
@@ -1469,7 +1550,7 @@ function AD_renderChannelDetailTable(channel){
   const tbody = document.querySelector('#adChannelDetailTable tbody');
   if(!tbody) return;
   const {f,t} = AD_getAR();
-  const rows = AD_filterRange(AD_RAW.dailyByChannel[channel]||[], f, t).slice();
+  const rows = AD_filterRange(AD_RAW.dailyByChannel[AD_resolveChannelKey(channel)]||[], f, t).slice();
   rows.sort((a,b)=> b['기간'] - a['기간']); // 최신 날짜가 위로
 
   if(rows.length === 0){
@@ -1523,7 +1604,7 @@ function AD_renderTable(){
     </tr>
     ${isOpen ? `<tr class="ch-detail-row"><td colspan="10" style="padding:0;">
         <div class="ch-detail">
-          ${(ch==='애드부스트'||ch==='NDA') ? `<p style="font-size:11px; color:var(--muted); margin:0 0 10px;">※ 애드부스트와 NDA는 원본 시트가 공유되어 있어 일별 데이터는 두 채널 합산 기준입니다.</p>` : ''}
+          ${ch==='애드부스트+NDA' ? `<p style="font-size:11px; color:var(--muted); margin:0 0 10px;">※ 애드부스트와 NDA는 원본 시트가 공유되어 있어 하나의 채널(합산)로 보여드려요.</p>` : ''}
           <div class="chart-wrap" style="height:220px;"><canvas id="adChannelDetailChart"></canvas></div>
           ${ch==='META_NAVER' ? `
           <div style="margin-top:18px;">
@@ -1592,7 +1673,7 @@ function AD_renderChannelDetailChart(channel){
   const canvas = document.getElementById('adChannelDetailChart');
   if(!canvas) return;
   const {f,t} = AD_getAR();
-  const rows = AD_filterRange(AD_RAW.dailyByChannel[channel]||[], f, t).slice();
+  const rows = AD_filterRange(AD_RAW.dailyByChannel[AD_resolveChannelKey(channel)]||[], f, t).slice();
   rows.sort((a,b)=> a['기간'] - b['기간']);
   const labels = rows.map(r=>`${r['기간'].getMonth()+1}/${r['기간'].getDate()}`);
   const spend = rows.map(r=>AD_n(r['광고비']));
