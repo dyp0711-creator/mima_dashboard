@@ -769,7 +769,7 @@ async function loadAll(){
       const price=+r.판매가||0;
       const name=r.상품명||'';
       let cat=catFn(name);
-      // 미로 본품 + 판매가 200,000~399,999원 → 시딩
+      // 미로 본품 + 판매가 200,000~300,000원 → 시딩
       if(cat==='미로'&&price>=200000&&price<=300000) cat='미로 시딩';
       return{...r,판매가:price,수량:+r.수량||1,카테고리:cat};
     });
@@ -1185,7 +1185,7 @@ function oDrD(date){
 function oDrCh(ch){
   let R=filt();if(CHMO!=='전체') R=R.filter(r=>r.월===CHMO);
   const rows=R.filter(r=>r.판매처===ch&&r.판매구분==='판매');
-  const m={};rows.forEach(r=>{const k=r.상품명||'';if(!m[k]) m[k]={name:k,cat:r.카테고리||'기타',n:0,v:0};m[k].n++;m[k].v+=r.판매가;});
+  const m={};rows.forEach(r=>{const cat=r.카테고리||'기타';const nm=r.상품명||'';const k=cat+'|'+nm;if(!m[k]) m[k]={name:nm,cat,n:0,v:0};m[k].n++;m[k].v+=r.판매가;});
   const items=Object.values(m).filter(i=>i.v>0).sort((a,b)=>b.v-a.v);
   const tot=sm(items,'v')||1,sa=rows.reduce((s,r)=>s+r.판매가,0);
   sv('dr-ch-t',`${ch}${CHMO!=='전체'?' · '+CHMO:''} 상품별`);
