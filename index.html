@@ -938,7 +938,7 @@ function rSum(){
   spDefs.forEach((s,i)=>{
     setD('spD'+i,s.c[0],s.c[1],'전월 동기 대비');
     if(s.d.length){
-      mkC('spC'+i,'line',days30,[{data:s.d,borderColor:s.sc,borderWidth:1.5,pointRadius:0,fill:true,backgroundColor:s.sc+'18',tension:.3}],{noScale:true,noLegend:true});
+      mkC('spC'+i,'line',days30,[{data:s.d,borderColor:s.sc,borderWidth:1.5,pointRadius:0,fill:true,backgroundColor:s.sc+'18',tension:.3}],{noScale:true,noLegend:true,tt:{label:ctx=>` ${fW(ctx.raw)}`}});
     }
   });
 
@@ -1056,7 +1056,7 @@ function aggCat(rows){const m={};rows.forEach(r=>{const c=r.카테고리||'기�
 function getDR(){let R=filt();if(DPROD!=='전체') R=R.filter(r=>r.카테고리===DPROD);const d=aggD(R);return sD(d);}
 function getMR(){let R=filt();if(MPROD!=='전체') R=R.filter(r=>r.카테고리===MPROD);return sM(aggM(R));}
 function getChR(){let R=filt();if(CHMO!=='전체') R=R.filter(r=>r.월===CHMO);return aggCh(R);}
-function getPrR(){let R=filt();if(PRMO!=='전체') R=R.filter(r=>r.월===PRMO);const d=aggCat(R);return PRSO==='판매금액'?[...d].sort((a,b)=>b.판매금액-a.판매금액):PRSO==='주문건수'?[...d].sort((a,b)=>b.주문건수-a.주문건수):d;}
+function getPrR(){let R=filt();if(PRMO!=='전체') R=R.filter(r=>r.월===PRMO);const d=aggCat(R).filter(r=>r.카테고리!=='기타');return PRSO==='판매금액'?[...d].sort((a,b)=>b.판매금액-a.판매금액):PRSO==='주문건수'?[...d].sort((a,b)=>b.주문건수-a.주문건수):d;}
 
 function sD(r){const a=[...r];if(DSORT==='최근순') return a.sort((a,b)=>b.날짜.localeCompare(a.날짜));if(DSORT==='오래된순') return a.sort((a,b)=>a.날짜.localeCompare(b.날짜));if(DSORT==='판매금액') return a.sort((a,b)=>b.판매금액-a.판매금액);return a;}
 function sM(r){const a=[...r];if(MSORT==='최근순') return a.sort((a,b)=>b.월.localeCompare(a.월));if(MSORT==='오래된순') return a.sort((a,b)=>a.월.localeCompare(b.월));if(MSORT==='판매금액') return a.sort((a,b)=>b.판매금액-a.판매금액);return a;}
@@ -1460,7 +1460,7 @@ function AD_renderDailyChart(){
     options:{
       responsive:true, maintainAspectRatio:false,
       interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ labels:{ color:'#111827', usePointStyle:true, pointStyle:'circle' } } },
+      plugins:{ legend:{ labels:{ color:'#111827', usePointStyle:true, pointStyle:'circle' } }, tooltip:{ callbacks:{ label:ctx=>` ${ctx.dataset.label}: ${AD_fmtWon(ctx.raw)}` } } },
       scales:{
         x:{ ticks:{ color:'#9ca3af', maxTicksLimit:14 }, grid:{ display:false } },
         y:{ ticks:{ color:'#9ca3af', callback:v=>AD_fmtNum(v) }, grid:{ color:'#e8eaf0' } }
@@ -1515,7 +1515,7 @@ function AD_renderChannelPie(){
     data:{ labels, datasets:[{ data:spend, backgroundColor: colors, borderColor:'#FFFFFF', borderWidth:3 }] },
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ position:'bottom', labels:{ color:'#111827', boxWidth:12, font:{size:11}, usePointStyle:true, pointStyle:'circle' } } }
+      plugins:{ legend:{ position:'bottom', labels:{ color:'#111827', boxWidth:12, font:{size:11}, usePointStyle:true, pointStyle:'circle' } }, tooltip:{ callbacks:{ label:ctx=>` ${ctx.label}: ${AD_fmtWon(ctx.raw)}` } } }
     }
   });
 }
@@ -1694,7 +1694,7 @@ function AD_renderChannelDetailChart(channel){
     options:{
       responsive:true, maintainAspectRatio:false,
       interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ labels:{ color:'#111827', usePointStyle:true, pointStyle:'circle' } } },
+      plugins:{ legend:{ labels:{ color:'#111827', usePointStyle:true, pointStyle:'circle' } }, tooltip:{ callbacks:{ label:ctx=>` ${ctx.dataset.label}: ${AD_fmtWon(ctx.raw)}` } } },
       scales:{
         x:{ ticks:{ color:'#9ca3af', maxTicksLimit:12 }, grid:{ display:false } },
         y:{ ticks:{ color:'#9ca3af', callback:v=>AD_fmtNum(v) }, grid:{ color:'#e8eaf0' } }
