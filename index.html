@@ -583,7 +583,7 @@ async function loadAll(){
       const name=r.상품명||'';
       let cat=catFn(name);
       // 미로 본품 + 판매가 200,000~399,999원 → 시딩
-      if(cat==='미로'&&price>=200000&&price<=300000) cat='미로 시딩';
+      if(cat==='미로'&&price>=200000&&price<=330000) cat='미로 시딩';
       return{...r,판매가:price,수량:+r.수량||1,카테고리:cat};
     });
     chips([{t:`✅ 판매 ${S.length}건`,c:'chip-ok'},{t:'🔄 광고 로드 중...',c:'chip-info'}]);
@@ -860,6 +860,10 @@ function rDayTbl(){
   const d=getDR(),showAd=MODE==='all';
   el('tbD').innerHTML=d.map((r,i)=>{
     const prv=d[i+1]?d[i+1].판매금액:null;
+    const pmDate=prevMonthDate(r.날짜);
+    const pyDate=prevYearDate(r.날짜);
+    const pmRev=saleDateMap[pmDate]||0;
+    const pyRev=saleDateMap[pyDate]||0;
     const adD=AD.filter(a=>a.date===r.날짜);
     const adSp=adD.reduce((s,a)=>s+a.spend,0);
     const roas=adSp>0?Math.round(r.판매금액/adSp*100):'—';
