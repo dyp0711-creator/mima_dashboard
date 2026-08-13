@@ -860,10 +860,6 @@ function rDayTbl(){
   const d=getDR(),showAd=MODE==='all';
   el('tbD').innerHTML=d.map((r,i)=>{
     const prv=d[i+1]?d[i+1].판매금액:null;
-    const pmDate=prevMonthDate(r.날짜);
-    const pyDate=prevYearDate(r.날짜);
-    const pmRev=saleDateMap[pmDate]||0;
-    const pyRev=saleDateMap[pyDate]||0;
     const adD=AD.filter(a=>a.date===r.날짜);
     const adSp=adD.reduce((s,a)=>s+a.spend,0);
     const roas=adSp>0?Math.round(r.판매금액/adSp*100):'—';
