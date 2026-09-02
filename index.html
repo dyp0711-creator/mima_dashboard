@@ -777,7 +777,7 @@ function setD(id,cur,prv,label){
 function rSales(){
   updSKPI();
   // 광고컬럼 표시
-  document.querySelectorAll('.adcol').forEach(e=>e.style.display=MODE==='all'?'':'none');
+  document.querySelectorAll('.adcol').forEach(e=>e.style.display=(MODE==='all'||MODE==='on')?'':'none');
   bDF();bMF();bChMo();bPrMo();
   rSTab(STAB);bOrdF();
 }
@@ -787,16 +787,17 @@ function updSKPI(){
   const{f,t}=getSRange();
   const rangeEl=el('sRangeLbl');
   if(rangeEl) rangeEl.textContent=f===t?f:f+' ~ '+t;
-  const R=filt().filter(r=>r.판매구분==='판매'),sl=R,y=yd(),mSt=ms();
+  const R=filt().filter(r=>r.판매구분==='판매'),sl=R;
   const rev=sm(sl,'판매가'),cnt=sl.length;
   const vl=sl.filter(r=>r.판매가>0);
   const avg=vl.length?sm(vl,'판매가')/vl.length:0;
-  const spM=AD.filter(r=>r.date>=mSt&&r.date<=y).reduce((s,r)=>s+r.spend,0);
-  const rM=R.filter(r=>r.날짜>=mSt&&r.날짜<=y&&r.판매구분==='판매').reduce((s,r)=>s+r.판매가,0);
-  const roM=spM>0?Math.round(rM/spM*100):0;
+  // 광고비: 판매 날짜 필터 범위와 동일하게 적용
+  const spM=AD.filter(r=>r.date>=f&&r.date<=t).reduce((s,r)=>s+r.spend,0);
+  const roM=spM>0?Math.round(rev/spM*100):0;
+  const adLbl=f===t?f:f.slice(0,7)===t.slice(0,7)?f.slice(0,7)+' 누계':f+' ~ '+t;
   sv('p-rev',fW(rev));sv('p-revS',(MODE==='all'?'전체':MODE==='on'?'온라인':'오프라인')+' 판매 '+cnt+'건');
   sv('p-cnt',cnt.toLocaleString()+'건');sv('p-cntS','실 판매 기준');
-  sv('p-avg',fW(avg));sv('p-ad',fW(spM));sv('p-adS',mSt.slice(0,7)+' 누계');
+  sv('p-avg',fW(avg));sv('p-ad',fW(spM));sv('p-adS',adLbl);
   sv('p-roas',roM>0?roM+'%':'—');
 }
 
@@ -857,7 +858,7 @@ function rDayCh(){
   sv('dTblT',DPROD==='전체'?'일별 상세':'일별 상세 — '+DPROD);
 }
 function rDayTbl(){
-  const d=getDR(),showAd=MODE==='all';
+  const d=getDR(),showAd=(MODE==='all'||MODE==='on');
   el('tbD').innerHTML=d.map((r,i)=>{
     const prv=d[i+1]?d[i+1].판매금액:null;
     const adD=AD.filter(a=>a.date===r.날짜);
