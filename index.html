@@ -582,12 +582,16 @@ async function loadAll(){
       const price=+r.판매가||0;
       const name=r.상품명||'';
       let cat=catFn(name);
-      // 미로 본품 + 판매가 200,000~330,000원 → 시딩
-      if(cat==='미로'&&price>=200000&&price<=330000) cat='미로 시딩';
-      // 2026-08-17 이후 미로 본품 → 미로 플러스
       const dateStr=r.날짜||'';
-      if(cat==='미로'&&dateStr>='2026-08-17') cat='미로 플러스';
-      if(cat==='미로 시딩'&&dateStr>='2026-08-17') cat='미로 플러스 시딩';
+      if(cat==='미로'){
+        if(dateStr>='2026-08-17'){
+          // 미로 플러스: 시딩은 정확히 35만원
+          cat = (price===350000) ? '미로 플러스 시딩' : '미로 플러스';
+        } else {
+          // 미로: 시딩은 정확히 30만원
+          cat = (price===300000) ? '미로 시딩' : '미로';
+        }
+      }
       return{...r,판매가:price,수량:+r.수량||1,카테고리:cat};
     });
     chips([{t:`✅ 판매 ${S.length}건`,c:'chip-ok'},{t:'🔄 광고 로드 중...',c:'chip-info'}]);
