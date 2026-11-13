@@ -583,8 +583,8 @@ async function loadAll(){
       const name=r.상품명||'';
       let cat=catFn(name);
       const dateStr=r.날짜||'';
-      // 밀리 시딩: 20만~25만원
-      if(cat==='밀리'&&price>=200000&&price<=250000) cat='밀리 시딩';
+      // 밀리 시딩: 20만~25만원 (단, 2026-11-12는 밀리 행사로 제외)
+      if(cat==='밀리'&&price>=200000&&price<=250000&&dateStr!=='2026-11-12') cat='밀리 시딩';
       if(cat==='미로'){
         if(dateStr>='2026-08-17'){
           // 미로 플러스: 시딩은 정확히 35만원
