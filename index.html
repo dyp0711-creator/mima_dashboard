@@ -578,13 +578,25 @@ async function loadAll(){
     // 판매
     const sr=await fetch(url,{redirect:'follow'});
     const sj=JSON.parse(await sr.text());
-    S=(sj.rows||[]).map(r=>{
+    const rawRows=sj.rows||[];
+    // 세트 주문 감지: 같은 주문번호에 크레오 본품이 있으면 세트 → 밀리 시딩 제외
+    const 크레오세트주문=new Set();
+    rawRows.forEach(r=>{
+      if(catFn(r.상품명||'')==='크레오'){
+        const o=String(r.주문번호||'');
+        if(o) 크레오세트주문.add(o);
+      }
+    });
+    S=rawRows.map(r=>{
       const price=+r.판매가||0;
       const name=r.상품명||'';
       let cat=catFn(name);
       const dateStr=r.날짜||'';
-      // 밀리 시딩: 20만~25만원 (단, 2026-11-11~14는 밀리 행사로 제외)
-      if(cat==='밀리'&&price>=200000&&price<=250000&&!(dateStr>='2026-11-11'&&dateStr<='2026-11-14')) cat='밀리 시딩';
+      const ordNo=String(r.주문번호||'');
+      // 밀리 시딩: 2026-11-03~10 기간 + 20만~25만원 (단, 크레오+밀리 세트 분할건은 제외)
+      if(cat==='밀리'&&price>=200000&&price<=250000
+         &&dateStr>='2026-11-03'&&dateStr<='2026-11-10'
+         &&!크레오세트주문.has(ordNo)) cat='밀리 시딩';
       if(cat==='미로'){
         if(dateStr>='2026-08-17'){
           // 미로 플러스: 시딩은 정확히 35만원
